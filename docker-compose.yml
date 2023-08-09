@@ -20,6 +20,8 @@ services:
           - POSTGRES_PASSWORD=postgres
         volumes:
           - pgdata:/var/lib/postgres/data/
+        ports:
+          - "5678:5432"
 volumes:
     pgdata:
 
