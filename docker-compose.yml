@@ -11,6 +11,7 @@ services:
           - "8000:8000"
         depends_on:
           - pgdb
+          - redis
     pgdb:
         image: postgres
         container_name: pgdb
@@ -22,6 +23,10 @@ services:
           - pgdata:/var/lib/postgres/data/
         ports:
           - "5678:5432"
+    redis:
+      image: "redis:alpine"
+
+
 volumes:
     pgdata:
 
