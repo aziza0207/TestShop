@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.http import HttpResponse
+from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .serializers import ProductListSerializer
@@ -9,7 +10,7 @@ import xlwt
 
 
 class ProductListView(generics.ListAPIView):
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
     serializer_class = ProductListSerializer
 
     def get_queryset(self):
@@ -22,38 +23,41 @@ class ProductListView(generics.ListAPIView):
         return queryset
 
 
-def export_excel(request):
-    response = HttpResponse(content_type='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.now()) + '.xls'
-    wb = xlwt.Workbook(encoding='utf-8')
-    ws = wb.add_sheet('Products')
-    row_num = 0
-    font_style = xlwt.XFStyle()
-    font_style.font.bold = True
+class ExportExcelView(APIView):
+    permission_classes = (IsAuthenticated,)
 
-    columns = ["Id",
-               "Category",
-               "Tags",
-               "Name",
-               "Price",
-               "Description",
-               "Created_at"]
+    def get(self, request):
 
-    for column in range(len(columns)):
-        ws.write(row_num, column, columns[column], font_style)
+        response = HttpResponse(content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.now()) + '.xls'
+        wb = xlwt.Workbook(encoding='utf-8')
+        ws = wb.add_sheet('Products')
+        row_num = 0
+        font_style = xlwt.XFStyle()
+        font_style.font.bold = True
 
-    font_style = xlwt.XFStyle()
-    rows = Product.objects.all() \
-        .values_list("id",
-                     "category",
-                     "tags",
-                     "name",
-                     "price",
-                     "description",
-                     "created_at")
-    for row in rows:
-        row_num += 1
-        for column in range(len(row)):
-            ws.write(row_num, column, str(row[column]), font_style)
-    wb.save(response)
-    return response
+        columns = ["Id",
+                   "Category",
+                   "Tags",
+                   "Name",
+                   "Price",
+                   "Description",
+                   "Created_at"]
+
+        for column in range(len(columns)):
+            ws.write(row_num, column, columns[column], font_style)
+
+        font_style = xlwt.XFStyle()
+        rows = Product.objects.all().values_list("id",
+                                                 "category",
+                                                 "tags",
+                                                 "name",
+                                                 "price",
+                                                 "description",
+                                                 "created_at")
+        for row in rows:
+            row_num += 1
+            for column in range(len(row)):
+                ws.write(row_num, column, str(row[column]), font_style)
+        wb.save(response)
+        return response
